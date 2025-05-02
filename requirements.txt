@@ -1,0 +1,10 @@
+streamlit
+pandas
+requests
+python-dotenv
+yfinance
+matplotlib
+fpdf
+forex-python
+prophet
+plotly
