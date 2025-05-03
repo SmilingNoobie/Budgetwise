@@ -8,3 +8,10 @@ fpdf
 forex-python
 prophet
 plotly
+
+# new:
+newsapi-python
+transformers
+torch
+sentence-transformers
+feedparser

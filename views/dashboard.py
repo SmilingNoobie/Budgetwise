@@ -1,60 +1,62 @@
 import streamlit as st
-from components.db import get_summary
-from components.ai_chatbot import ask_budgetwise_budget
-import yfinance as yf
-import plotly.express as px
+import plotly.express   as px
+import plotly.graph_objects as go
+from components.db      import get_summary, get_latest_profile
 
 def run():
-    st.subheader("📊 Budget Dashboard Overview")
+    st.header("Budget Dashboard Overview")
 
-    # 1) Expenses summary
-    total, monthly, count, grouped = get_summary()
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Total Expenses", f"${total:.2f}")
-    c2.metric("This Month", f"${monthly:.2f}")
-    c3.metric("Records Logged", count)
+    prof = get_latest_profile()
+    if prof is None:
+        st.info("No financial profile found. Go to Get Started to set it up.")
+        return
 
-    # 2) Bar chart (dark theme)
-    st.markdown("### Spending by Category")
-    bar = px.bar(
-        grouped, x="category", y="amount",
-        labels={"amount": "Amount ($)", "category": "Category"},
-        title="Expenses This Month",
-        template="plotly_dark",
-        color="amount",
-        color_continuous_scale=px.colors.sequential.Plasma
+    # Profile metrics
+    st.subheader("Your Profile")
+    st.metric("After‑Tax Income", f"${prof['after_tax_income']:,.2f}")
+    c1, c2 = st.columns(2)
+    c1.metric("1‑Mo Goal", f"${prof['goal_1m']:,.2f}")
+    c2.metric("Savings",  f"${prof['savings']:,.2f}")
+    st.markdown("---")
+
+    # This month’s expenses
+    total, count, grouped = get_summary()
+    remaining = max(prof["after_tax_income"] - total, 0.0)
+
+    # Sankey
+    st.subheader("Income Flow (Sankey)")
+    labels = ["Income"] + grouped["category"].tolist() + ["Remaining"]
+    sources = [0]*len(grouped) + [0]
+    targets = list(range(1,1+len(grouped))) + [len(grouped)+1]
+    values  = grouped["amount"].tolist() + [remaining]
+    fig_sankey = go.Figure(go.Sankey(
+        node=dict(label=labels, pad=15, thickness=20),
+        link=dict(source=sources, target=targets, value=values)
+    ))
+    fig_sankey.update_layout(template="plotly_white", height=350)
+    st.plotly_chart(fig_sankey, use_container_width=True)
+    st.markdown("---")
+
+    # Bar chart
+    st.subheader("Spending by Category")
+    if grouped.empty:
+        st.info("No expenses logged yet.")
+    else:
+        fig_bar = px.bar(
+            grouped, x="category", y="amount",
+            labels={"amount":"Amount ($)","category":"Category"},
+            template="plotly_white",
+            color="amount", color_continuous_scale=px.colors.sequential.Plasma
+        )
+        st.plotly_chart(fig_bar, use_container_width=True)
+    st.markdown("---")
+
+    # Goal vs actual
+    st.subheader("Goal vs. Actual (1‑Month)")
+    fig_goal = px.bar(
+        x=["1‑Mo Goal","Actual Spending"],
+        y=[prof["goal_1m"], total],
+        labels={"x":"","y":"Amount ($)"},
+        template="plotly_white"
     )
-    st.plotly_chart(bar, use_container_width=True)
-
-    # 3) AI Budget Suggestions button (moved below chart)
-    if st.button("How am I doing this month?"):
-        summary = dict(zip(grouped["category"], grouped["amount"]))
-        with st.spinner("Analyzing your spending…"):
-            advice = ask_budgetwise_budget(summary)
-        st.subheader("💡 AI-Generated Budget Plan & Tips")
-        st.write(advice)
-
-    # 4) Stock Watchlist
-    st.markdown("### 📈 Your Stock Watchlist")
-    symbols = st.text_input("Enter stock symbols (comma-separated)", "AAPL, TSLA")
-    period = st.selectbox("Select historical period", ["1d","7d","1mo","6mo","ytd","5y"], index=1)
-
-    if st.button("Update Watchlist"):
-        syms = [s.strip().upper() for s in symbols.split(",") if s.strip()]
-        for sym in syms:
-            st.markdown(f"#### {sym}")
-            try:
-                ticker = yf.Ticker(sym)
-                hist = ticker.history(period=period)
-                if hist.empty:
-                    st.error(f"No data for {sym}")
-                else:
-                    fig = px.line(
-                        hist, x=hist.index, y="Close",
-                        title=f"{sym} Price ({period})",
-                        template="plotly_dark",
-                        labels={"index":"Date","Close":"Close Price ($)"}
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-            except Exception as e:
-                st.error(f"Error fetching {sym}: {e}")
+    st.plotly_chart(fig_goal, use_container_width=True)

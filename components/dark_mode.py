@@ -4,7 +4,7 @@ import streamlit as st
 def toggle_theme():
     # Initialize with dark mode ON
     if "dark_mode" not in st.session_state:
-        st.session_state.dark_mode = True  # Changed to default True
+        st.session_state.dark_mode = False  # Changed to default True
 
     dark = st.sidebar.checkbox("🌙 Dark Mode", value=st.session_state.dark_mode)
     if dark != st.session_state.dark_mode:
