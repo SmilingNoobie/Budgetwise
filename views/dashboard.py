@@ -23,7 +23,7 @@ def run():
     total, count, grouped = get_summary()
     remaining = max(prof["after_tax_income"] - total, 0.0)
 
-    # Sankey
+    # Sankey chart
     st.subheader("Income Flow (Sankey)")
     labels = ["Income"] + grouped["category"].tolist() + ["Remaining"]
     sources = [0]*len(grouped) + [0]

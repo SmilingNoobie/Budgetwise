@@ -71,7 +71,7 @@ def run():
         )
         st.session_state.g1y = st.slider(
             "1‑Year Investment Goal ($)",
-            0.0, 100000.0, st.session_state.g1y, step=1000.0
+            0.0, 50000.0, st.session_state.g1y, step=1000.0
         )
 
     # ─── Step 3: Dynamic Expenses ─────────────────────────────────────────────────

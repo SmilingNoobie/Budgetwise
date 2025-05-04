@@ -20,7 +20,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3) PWA (if you need it)
+# 3) PWA injection
 st.markdown("""
 <link rel="manifest" href="/static/manifest.json" />
 <script>
@@ -63,7 +63,7 @@ with st.sidebar:
 # 8) Run
 PAGES[st.session_state.selection]()
 
-# 9) Optional swipe nav
+# 9) Swipe nav for mobile nav
 components.html("""
 <script>
  let startX, endX, th=50;

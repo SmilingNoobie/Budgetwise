@@ -4,7 +4,6 @@ import os
 import requests
 from dotenv import load_dotenv
 
-# Load your .env
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -36,7 +35,7 @@ def call_groq(prompt: str, model: str = "llama3-70b-8192") -> str:
 
 def ask_budgetwise_ai(query: str) -> str:
     """
-    Free‐form chatbot: answer any single user question about budgeting.
+        answer any single user question about budgeting.
     """
     prompt = (
         f"User question: {query}\n\n"
